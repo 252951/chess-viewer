@@ -2,7 +2,7 @@
 <html lang="pl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
 <title>Chess Viewer</title>
 
@@ -64,22 +64,19 @@ let chess = new Chess();
 let moves = [];
 let currentMove = 0;
 
-function getPGN(){
-
+function getPGN() {
     const params = new URLSearchParams(window.location.search);
-
     return params.get("pgn")
         ? decodeURIComponent(params.get("pgn"))
         : "";
 }
 
-function updateCounter(){
-
+function updateCounter() {
     document.getElementById("counter").innerText =
         currentMove + " / " + moves.length;
 }
 
-function nextMove(){
+function nextMove() {
 
     if(currentMove >= moves.length)
         return;
@@ -93,7 +90,7 @@ function nextMove(){
     updateCounter();
 }
 
-function prevMove(){
+function prevMove() {
 
     if(currentMove <= 0)
         return;
@@ -107,14 +104,15 @@ function prevMove(){
     updateCounter();
 }
 
-window.onload = function(){
+window.onload = function() {
 
-    board = Chessboard("board",{
+    board = Chessboard('board', {
 
-        position:"start",
+        position: 'start',
 
-        pieceTheme:
-        "https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png"
+        pieceTheme: function(piece) {
+            return 'https://cdnjs.cloudflare.com/ajax/libs/chessboard.js/1.0.0/img/chesspieces/wikipedia/' + piece + '.png';
+        }
 
     });
 
@@ -124,20 +122,16 @@ window.onload = function(){
 
         const tempChess = new Chess();
 
-        const loaded = tempChess.load_pgn(pgn);
-
-        if(loaded){
+        if(tempChess.load_pgn(pgn)){
 
             moves = tempChess.history();
 
             console.log("PGN loaded");
-
             console.log(moves);
 
-        }
-        else{
+        } else {
 
-            console.error("PGN load failed");
+            console.error("Nie udało się wczytać PGN");
 
         }
     }
