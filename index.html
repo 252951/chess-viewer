@@ -1,32 +1,31 @@
 <!DOCTYPE html>
 <html>
 <head>
+<meta charset="UTF-8">
 
 <link rel="stylesheet"
 href="https://cdn.jsdelivr.net/npm/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
 
 <style>
-
-body{
-    margin:20px;
-    font-family:Arial;
+body {
+  margin: 20px;
+  font-family: Arial, sans-serif;
 }
 
-#board{
-    width:600px;
+#board {
+  width: 520px;
 }
 
-button{
-    margin:5px;
+button {
+  margin: 5px;
+  font-size: 18px;
 }
-
 </style>
-
 </head>
 
 <body>
 
-<h2 id="title">Chess Viewer</h2>
+<h2>Chess Viewer</h2>
 
 <div id="board"></div>
 
@@ -35,83 +34,69 @@ button{
 <button onclick="prevMove()">◀</button>
 <button onclick="nextMove()">▶</button>
 
-<p id="moveCounter"></p>
+<p id="moveCounter">0 / 0</p>
 
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
-
 <script src="https://cdn.jsdelivr.net/npm/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
 
 <script>
+var chess = new Chess();
+var board = null;
+var moves = [];
+var current = 0;
 
-const chess = new Chess();
-
-const board = Chessboard('board',{
-    position:'start'
-});
-
-let moves = [];
-let current = 0;
-
-const urlParams = new URLSearchParams(window.location.search);
-
-const pgn = decodeURIComponent(
-    urlParams.get("pgn") || ""
-);
-
-if(pgn){
-
-    chess.load_pgn(pgn);
-
-    moves = chess.history();
-
-    chess.reset();
-
-    board.position(chess.fen());
-
-    updateCounter();
-
+function getPGN() {
+  const params = new URLSearchParams(window.location.search);
+  return decodeURIComponent(params.get("pgn") || "");
 }
 
-function nextMove(){
-
-    if(current < moves.length){
-
-        chess.move(moves[current]);
-
-        current++;
-
-        board.position(chess.fen());
-
-        updateCounter();
-
-    }
-
-}
-
-function prevMove(){
-
-    if(current > 0){
-
-        chess.undo();
-
-        current--;
-
-        board.position(chess.fen());
-
-        updateCounter();
-
-    }
-
-}
-
-function updateCounter(){
-
-    document.getElementById("moveCounter")
-    .innerText =
+function updateCounter() {
+  document.getElementById("moveCounter").innerText =
     current + " / " + moves.length;
-
 }
 
+function nextMove() {
+  if (current < moves.length) {
+    chess.move(moves[current]);
+    current++;
+    board.position(chess.fen());
+    updateCounter();
+  }
+}
+
+function prevMove() {
+  if (current > 0) {
+    chess.undo();
+    current--;
+    board.position(chess.fen());
+    updateCounter();
+  }
+}
+
+window.onload = function () {
+  board = Chessboard("board", {
+    position: "start",
+    draggable: false
+  });
+
+  const pgn = getPGN();
+
+  if (pgn) {
+    const ok = chess.load_pgn(pgn);
+
+    if (ok) {
+      moves = chess.history();
+      chess.reset();
+      board.position("start");
+    } else {
+      document.getElementById("moveCounter").innerText =
+        "Nie udało się wczytać PGN";
+    }
+  }
+
+  updateCounter();
+};
 </script>
 
 </body>
