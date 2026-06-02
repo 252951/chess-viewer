@@ -6,33 +6,55 @@
 
 <title>Chess Viewer</title>
 
-<link rel="stylesheet"
-href="https://cdnjs.cloudflare.com/ajax/libs/chessboard.js/1.0.0/chessboard-1.0.0.min.css">
-
 <style>
-body{
+body {
     font-family: Arial, sans-serif;
-    padding:20px;
+    padding: 20px;
 }
 
-#board{
-    width:600px;
-    max-width:100%;
+h2 {
+    margin-bottom: 10px;
 }
 
-.controls{
-    margin-top:15px;
+#board {
+    display: grid;
+    grid-template-columns: repeat(8, 64px);
+    grid-template-rows: repeat(8, 64px);
+    width: 512px;
+    border: 2px solid #333;
 }
 
-button{
-    padding:8px 15px;
-    margin-right:10px;
-    cursor:pointer;
+.square {
+    width: 64px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 42px;
 }
 
-#counter{
-    margin-top:10px;
-    font-weight:bold;
+.light {
+    background-color: #f0d9b5;
+}
+
+.dark {
+    background-color: #b58863;
+}
+
+.controls {
+    margin-top: 15px;
+}
+
+button {
+    padding: 8px 15px;
+    margin-right: 10px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+#counter {
+    margin-top: 10px;
+    font-weight: bold;
 }
 </style>
 </head>
@@ -50,25 +72,52 @@ button{
 
 <div id="counter">0 / 0</div>
 
-<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/chessboard.js/1.0.0/chessboard-1.0.0.min.js"></script>
-
 <script>
-
-let board;
 let chess = new Chess();
-
 let moves = [];
 let currentMove = 0;
 
+const pieces = {
+    p: "♟", r: "♜", n: "♞", b: "♝", q: "♛", k: "♚",
+    P: "♙", R: "♖", N: "♘", B: "♗", Q: "♕", K: "♔"
+};
+
 function getPGN() {
     const params = new URLSearchParams(window.location.search);
-    return params.get("pgn")
-        ? decodeURIComponent(params.get("pgn"))
-        : "";
+    return params.get("pgn") ? decodeURIComponent(params.get("pgn")) : "";
+}
+
+function drawBoard() {
+    const boardDiv = document.getElementById("board");
+    boardDiv.innerHTML = "";
+
+    const fenBoard = chess.fen().split(" ")[0];
+    const rows = fenBoard.split("/");
+
+    for (let rank = 0; rank < 8; rank++) {
+        let file = 0;
+
+        for (const char of rows[rank]) {
+            if (!isNaN(char)) {
+                for (let i = 0; i < Number(char); i++) {
+                    addSquare(rank, file, "");
+                    file++;
+                }
+            } else {
+                addSquare(rank, file, pieces[char]);
+                file++;
+            }
+        }
+    }
+}
+
+function addSquare(rank, file, piece) {
+    const square = document.createElement("div");
+    square.className = "square " + ((rank + file) % 2 === 0 ? "light" : "dark");
+    square.textContent = piece;
+    document.getElementById("board").appendChild(square);
 }
 
 function updateCounter() {
@@ -77,68 +126,41 @@ function updateCounter() {
 }
 
 function nextMove() {
-
-    if(currentMove >= moves.length)
-        return;
+    if (currentMove >= moves.length) return;
 
     chess.move(moves[currentMove]);
-
     currentMove++;
 
-    board.position(chess.fen());
-
+    drawBoard();
     updateCounter();
 }
 
 function prevMove() {
-
-    if(currentMove <= 0)
-        return;
+    if (currentMove <= 0) return;
 
     chess.undo();
-
     currentMove--;
 
-    board.position(chess.fen());
-
+    drawBoard();
     updateCounter();
 }
 
 window.onload = function() {
-
-    board = Chessboard('board', {
-
-        position: 'start',
-
-        pieceTheme: function(piece) {
-            return 'https://cdnjs.cloudflare.com/ajax/libs/chessboard.js/1.0.0/img/chesspieces/wikipedia/' + piece + '.png';
-        }
-
-    });
-
     const pgn = getPGN();
 
-    if(pgn){
-
+    if (pgn) {
         const tempChess = new Chess();
 
-        if(tempChess.load_pgn(pgn)){
-
+        if (tempChess.load_pgn(pgn)) {
             moves = tempChess.history();
-
-            console.log("PGN loaded");
-            console.log(moves);
-
         } else {
-
             console.error("Nie udało się wczytać PGN");
-
         }
     }
 
+    drawBoard();
     updateCounter();
 };
-
 </script>
 
 </body>
